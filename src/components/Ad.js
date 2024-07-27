@@ -21,7 +21,7 @@ class Ad {
     process = async () => {
 
         if (!this.isValidAd()) {
-            $logger.debug('Ad not valid');
+            $logger.debug('Ad not valid')
             return false
         }
 
@@ -38,7 +38,7 @@ class Ad {
             }
 
         } catch (error) {
-            $logger.error(error);
+            $logger.error(error)
         }
     }
 
@@ -56,19 +56,15 @@ class Ad {
         try {
             await adRepository.createAd(this)
             $logger.info('Ad ' + this.id + ' added to the database')
-        }
 
-        catch (error) {
-            $logger.error(error)
-        }
-
-        if (this.notify) {
-            try {
+            // Notify only if it's a new addition
+            if (!this.saved) {
                 const msg = 'New ad found!\n' + this.title + ' - R$' + this.price + '\n\n' + this.url
-                notifier.sendNotification(msg, this.id)
-            } catch (error) {
-                $logger.error('Could not send a notification')
+                await notifier.sendNotification(msg, this.id)
             }
+
+        } catch (error) {
+            $logger.error(error)
         }
     }
 
@@ -107,9 +103,6 @@ class Ad {
         }
     }
 
-    // some elements found in the ads selection don't have an url
-    // I supposed that OLX adds other content between the ads,
-    // let's clean those empty ads
     isValidAd = () => {
 
         if (!isNaN(this.price) && this.url && this.id) {

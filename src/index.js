@@ -17,6 +17,9 @@ const runScraper = async () => {
 }
 
 const main = async () => {
+
+  // await new Promise(resolve => setTimeout(resolve, 5 * 60 * 1000));
+
   $logger.info("Program started")
   await createTables()
   await initializeCycleTLS()
