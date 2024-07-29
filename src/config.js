@@ -12,10 +12,8 @@ config.urls = [
 config.interval = process.env.CRON_TIME
 config.telegramChatID = process.env.TELEGRAM_CHAT_ID
 config.telegramToken = process.env.TELEGRAM_TOKEN
-config.dbFile = '../data/ads.db'
 
 config.logger={
-    logFilePath: '../data/scrapper.log',
     timestampFormat:'YYYY-MM-DD HH:mm:ss'
 }
 

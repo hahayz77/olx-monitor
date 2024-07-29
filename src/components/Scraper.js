@@ -31,9 +31,9 @@ const scraper = async (url) => {
         currentUrl = setUrlParam(url, 'o', page)
         let response
         try {
-            response        = await $httpClient(currentUrl)
-            const $         = cheerio.load(response)
-            nextPage        = await scrapePage($, searchTerm, notify, url)
+            response = await $httpClient(currentUrl)
+            const $ = cheerio.load(response)
+            nextPage = await scrapePage($, searchTerm, notify, url)
         } catch (error) {
             $logger.error(error)
             return
@@ -45,11 +45,11 @@ const scraper = async (url) => {
     $logger.info('Valid ads: ' + validAds)
 
     if (validAds) {
-        const averagePrice = sumPrices / validAds;
+        const averagePrice = Math.round(sumPrices / validAds);
 
         $logger.info('Maximum price: ' + maxPrice)
         $logger.info('Minimum price: ' + minPrice)
-        $logger.info('Average price: ' + sumPrices / validAds)
+        $logger.info('Average price: ' + averagePrice)
 
         const scrapperLog = {
             url,
@@ -73,7 +73,7 @@ const scrapePage = async ($, searchTerm, notify) => {
 
         const adList = JSON.parse(script).props.pageProps.ads
 
-        if (!Array.isArray(adList) || !adList.length ) {
+        if (!Array.isArray(adList) || !adList.length) {
             return false
         }
 
@@ -102,6 +102,7 @@ const scrapePage = async ($, searchTerm, notify) => {
             }
 
             const ad = new Ad(result)
+            // console.log(ad)
             ad.process()
 
             if (ad.valid) {

@@ -1,132 +1,122 @@
-const { db } = require('../database/database.js')
-const $logger = require('../components/Logger.js')
+const { supabase } = require('../database/database.js');
+const $logger = require('../components/Logger.js');
 
 const getAd = async (id) => {
-    $logger.debug('adRepositorie: getAd')
+    $logger.debug('adRepository: getAd');
+    try {
+        let { data, error } = await supabase
+            .from('ads')
+            .select('*')
+            .eq('id', id);
+        if (error) {
+            $logger.error('Error fetching ad by id:', error);
+            throw error;
+        }
+        if (!data || data.length === 0) {
+            $logger.error('No ad found with this ID');
+            throw new Error('No ad found with this ID');
+        }
+        return data[0];
+    } catch (err) {
+        $logger.info('Error in getAd:', err);
+        throw err;
+    }
+};
 
-    const query = `SELECT * FROM ads WHERE id = ?`
-    const values = [id]
+const getAdsBySearchTerm = async (searchTerm, limit = 10) => {
+    $logger.debug('adRepository: getAdsBySearchTerm');
+    try {
+        let { data, error } = await supabase
+            .from('ads')
+            .select('*')
+            .eq('searchTerm', searchTerm)
+            .limit(limit);
+        if (error) {
+            $logger.error('Error fetching ads by search term:', error);
+            throw error;
+        }
+        if (!data || data.length === 0) {
+            $logger.error('No ads found with this term');
+            throw new Error('No ads found with this term');
+        }
+        return data;
+    } catch (err) {
+        $logger.error('Error in getAdsBySearchTerm:', err);
+        throw err;
+    }
+};
 
-    return new Promise(function (resolve, reject) {
-        db.get(query, values, function (error, row) {
-
-            if (error) {
-                reject(error)
-                return
-            }
-
-            if (!row) {
-                reject('No ad with this ID was found')
-                return
-            }
-
-            resolve(row)
-        })
-    })
-}
-
-
-const getAdsBySearchTerm = async (term, limit) => {
-    $logger.debug('adRepositorie: getAd')
-
-    const query = `SELECT * FROM ads WHERE searchTerm = ? LIMIT ?`
-    const values = [term, limit]
-
-    return new Promise(function (resolve, reject) {
-        db.all(query, values, function (error, rows) {
-
-            if (error) {
-                reject(error)
-                return
-            }
-
-            if (!rows) {
-                reject('No ad with this term was found')
-                return
-            }
-
-            resolve(rows)
-        })
-    })
-}
-
-
-const getAdsBySearchId = async (id, limit) => {
-    $logger.debug('adRepositorie: getAd')
-
-    const query = `SELECT * FROM ads WHERE searchId = ? LIMIT ?`
-    const values = [id, limit]
-
-    return new Promise(function (resolve, reject) {
-        db.all(query, values, function (error, rows) {
-
-            if (error) {
-                reject(error)
-                return
-            }
-
-            if (!rows) {
-                reject('No ad with this id was found')
-                return
-            }
-
-            resolve(rows)
-        })
-    })
-}
-
+const getAdsBySearchId = async (id, limit = 10) => {
+    $logger.debug('adRepository: getAdsBySearchId');
+    try {
+        let { data, error } = await supabase
+            .from('ads')
+            .select('*')
+            .eq('searchId', id)
+            .limit(limit);
+        if (error) {
+            $logger.error('Error fetching ads by search ID:', error);
+            throw error;
+        }
+        if (!data || data.length === 0) {
+            $logger.error('No ads found with this ID');
+            throw new Error('No ads found with this ID');
+        }
+        return data;
+    } catch (err) {
+        $logger.error('Error in getAdsBySearchId:', err);
+        throw err;
+    }
+};
 
 const createAd = async (ad) => {
-    $logger.debug('adRepositorie: createAd')
+    $logger.debug('adRepository: createAd');
+    try {
+        const now = new Date().toISOString();
+        const adData = {
+            id: ad.id,
+            url: ad.url,
+            title: ad.title,
+            searchTerm: ad.searchTerm,
+            price: ad.price,
+            created: now,
+            lastUpdate: now
+        };
+        console.log('createAd data:', adData);
+        let { error } = await supabase
+            .from('ads')
+            .insert([adData]);
+        if (error) {
+            $logger.error('Error inserting ad:', error);
+            throw error;
+        }
+    } catch (err) {
+        $logger.error('Error in createAd:', err);
+        throw err;
+    }
+};
 
-    const query = `
-        INSERT INTO ads( id, url, title, searchTerm, price, created, lastUpdate )
-        VALUES( ?, ?, ?, ?, ?, ?, ? )
-    `
-
-    const now = new Date().toISOString()
-
-    const values = [
-        ad.id,
-        ad.url,
-        ad.title,
-        ad.searchTerm,
-        ad.price,
-        now,
-        now
-    ]
-
-    return new Promise(function (resolve, reject) {
-        db.run(query, values, function (error, rows) {
-
-            if (error) {
-                reject(error)
-                return
-            }
-
-            resolve(rows)
-        })
-    })
-}
-
-const updateAd = async (ad) => {
-    $logger.debug('adRepositorie: updateAd')
-
-    const query = `UPDATE ads SET price = ?, lastUpdate = ?  WHERE id = ?`
-    const values = [ad.price, new Date().toISOString(), ad.id]
-
-    return new Promise(function (resolve, reject) {
-        db.run(query, values, function (error) {
-
-            if (error) {
-                reject(error)
-                return
-            }
-
-            resolve(true)
-        })
-    })
-}
+const updateAd = async (id, ad) => {
+    $logger.debug('adRepository: updateAd');
+    try {
+        const updateData = {
+            price: ad.price,
+            lastUpdate: new Date().toISOString()
+        };
+        console.log('updateAd data:', updateData);
+        let { error } = await supabase
+            .from('ads')
+            .update(updateData)
+            .eq('id', id);
+        if (error) {
+            $logger.error('Error updating ad:', error);
+            throw error;
+        }
+    } catch (err) {
+        $logger.error('Error in updateAd:', err);
+        throw err;
+    }
+};
 
 module.exports = {
     getAd,
@@ -134,4 +124,4 @@ module.exports = {
     getAdsBySearchId,
     createAd,
     updateAd
-}
+};

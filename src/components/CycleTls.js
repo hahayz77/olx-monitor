@@ -3,7 +3,11 @@ const initCycleTLS = require("cycletls")
 let cycleTLSInstance
 
 async function initializeCycleTLS() {
-  cycleTLSInstance = await initCycleTLS()
+  try {
+    cycleTLSInstance = await initCycleTLS()
+  } catch (error) {
+    console.error("initializeCycleTLS Error!",error)
+  }
 }
 
 async function exitCycleTLS() {

@@ -1,63 +1,33 @@
-const { db } = require('../database/database.js')
-const $logger = require('../components/Logger.js')
+const { supabase } = require('../database/database.js');
 
 const saveLog = async (data) => {
-    $logger.debug('scrapperRepository: saveLog')
-
-    const query = `
-        INSERT INTO logs(  url, adsFound, averagePrice, minPrice, maxPrice, created )
-        VALUES( ?, ?, ?, ?, ?, ? )
-    `
-
-    const now = new Date().toISOString()
-
-    const values = [
-        data.url,
-        data.adsFound,
-        data.averagePrice,
-        data.minPrice,
-        data.maxPrice,
-        now,
-    ]
-
-    return new Promise(function (resolve, reject) {
-        db.run(query, values, function (error, rows) {
-
-            if (error) {
-                reject(error)
-                return
-            }
-
-            resolve(rows)
-        })
-    })
-}
+    try {
+        let { error } = await supabase
+            .from('logs')
+            .insert([
+                { url: data.url, adsFound: data.adsFound, averagePrice: data.averagePrice, minPrice: data.minPrice, maxPrice: data.maxPrice, created: new Date().toISOString() }
+            ]);
+        if (error) throw error;
+    } catch (error) {
+        console.error("SaveLog Error: ", error)
+    }
+};
 
 const getLogsByUrl = async (url, limit) => {
-    $logger.debug('scrapperRepository: getLogsByUrld')
-
-    const query = `SELECT * FROM logs WHERE url = ? LIMIT ?`
-    const values = [url, limit]
-
-    return new Promise(function (resolve, reject) {
-        db.all(query, values, function (error, rows) {
-
-            if (error) {
-                reject(error)
-                return
-            }
-
-            if (!rows) {
-                reject('No ad with this id was found')
-                return
-            }
-
-            resolve(rows)
-        })
-    })
-}
+    try {
+        let { data, error } = await supabase
+            .from('logs')
+            .select('*')
+            .eq('url', url)
+            .limit(limit);
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error("getLogsError: ", error)
+    }
+};
 
 module.exports = {
     saveLog,
     getLogsByUrl
-}
+};

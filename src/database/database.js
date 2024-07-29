@@ -1,62 +1,77 @@
-const path = require('path')
-const config = require('../config')
-const sqlite = require("sqlite3").verbose()
-const db = new sqlite.Database(
-  path.join(__dirname, '../', config.dbFile)
-)
+require('dotenv').config();
+const { createClient } = require('@supabase/supabase-js');
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const createTables = async () => {
+  // Create table at Supabase
 
-  // Define separate SQL statements for each table creation
-  const queries = [
-    `
-    CREATE TABLE IF NOT EXISTS "ads" (
-        "id"            INTEGER NOT NULL UNIQUE,
-        "searchTerm"    TEXT NOT NULL,
-        "title"	        TEXT NOT NULL,
-        "price"         INTEGER NOT NULL,
-        "url"           TEXT NOT NULL,
-        "created"       TEXT NOT NULL,
-        "lastUpdate"    TEXT NOT NULL
-    );`,
+  // ######### ADS TABLE #########
+  // create table
+  // public.ads (
+  //   id text not null,
+  //   url text null,
+  //   title text null,
+  //   "searchTerm" text null,
+  //   created text null,
+  //   "lastUpdate" text null,
+  //   price integer null,
+  //   constraint ads_pkey primary key (id)
+  // ) tablespace pg_default;
 
-    `CREATE TABLE IF NOT EXISTS "logs" (
-        "id"            INTEGER NOT NULL UNIQUE,
-        "url"           TEXT NOT NULL,  
-        "adsFound"      INTEGER NOT NULL, 
-        "averagePrice"  NUMERIC NOT NULL,
-        "minPrice"      NUMERIC NOT NULL,
-        "maxPrice"      NUMERIC NOT NULL, 
-        "created"       TEXT NOT NULL,
-        PRIMARY KEY("id" AUTOINCREMENT)
-    );`
-  ];
+  // ######### LOGS TABLE #########
+  // create table
+  // public.logs (
+  //   url text null,
+  //   "adsFound" smallint null,
+  //   "averagePrice" integer null,
+  //   "minPrice" integer null,
+  //   "maxPrice" integer null,
+  //   created text not null,
+  //   constraint logs_pkey primary key (created)
+  // ) tablespace pg_default;
 
-  return new Promise(function(resolve, reject) {
-    // Iterate through the array of queries and execute them one by one
-    const executeQuery = (index) => {
-      if (index === queries.length) {
-        resolve(true); // All queries have been executed
-        return;
-      }
+  try {
+    startScriptLog()
+  } catch (error) {
+    console.error("StartScript Error: ", error)
+  }
 
-      db.run(queries[index], function(error) {
-        if (error) {
-          reject(error);
-          return;
+};
+
+
+const now = new Date().toISOString();
+
+const startScriptLog = async () => {
+  try {
+    let { error: logsError } = await supabase
+      .from('logs')
+      .insert([
+        {
+          url: 'Starting script....',
+          adsFound: null,
+          averagePrice: null,
+          minPrice: null,
+          maxPrice: null,
+          created: now
         }
+      ]);
 
-        // Execute the next query in the array
-        executeQuery(index + 1);
-      });
-    };
-
-    // Start executing the queries from index 0
-    executeQuery(0);
-  });
-}
+    if (logsError) {
+      console.error('Error inserting into logs:', logsError);
+      throw logsError;
+    } else {
+      console.log('Successfully inserted test record into logs');
+    }
+  } catch (error) {
+    console.error('Error in startScriptLog:', error);
+  }
+};
 
 module.exports = {
-  db,
-  createTables
-}
+  supabase,
+  createTables,
+  startScriptLog
+};

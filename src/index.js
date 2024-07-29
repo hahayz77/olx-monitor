@@ -20,10 +20,14 @@ const main = async () => {
 
   // await new Promise(resolve => setTimeout(resolve, 5 * 60 * 1000));
 
-  $logger.info("Program started")
-  await createTables()
-  await initializeCycleTLS()
-  runScraper()
+  try {
+    $logger.info("Program started")
+    await createTables()
+    await initializeCycleTLS()
+    runScraper()
+  } catch (error) {
+    console.error("Main Error block!",error)
+  }
 }
 
 main()
