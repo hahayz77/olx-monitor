@@ -18,8 +18,6 @@ const runScraper = async () => {
 
 const main = async () => {
 
-  // await new Promise(resolve => setTimeout(resolve, 5 * 60 * 1000));
-
   try {
     $logger.info("Program started")
     await createTables()
